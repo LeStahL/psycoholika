@@ -1,0 +1,51 @@
+#![enable(implicit_some)]
+(
+	meta: (
+		id: "stK3Wt",
+		name: "psytrance wurstbude",
+		description: "is great",
+		tags: [
+			"nr4",
+		],
+	),
+	passes: {
+		Common: (
+			inputs: [
+				None,
+				None,
+				None,
+				None,
+			],
+		),
+		BufferA: (
+			inputs: [
+				(
+					asset: Misc(BufferA),
+					sampler: Custom((
+						filter: linear,
+						wrap: clamp,
+						vflip: true,
+					)),
+				),
+				None,
+				None,
+				None,
+			],
+		),
+		Image: (
+			inputs: [
+				(
+					asset: Misc(BufferA),
+					sampler: Custom((
+						filter: linear,
+						wrap: clamp,
+						vflip: true,
+					)),
+				),
+				None,
+				None,
+				None,
+			],
+		),
+	},
+)
