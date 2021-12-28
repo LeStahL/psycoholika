@@ -80,6 +80,14 @@ float dpsycoholika(vec2 x)
     return ret;
 }
 
+// Taken from https://www.iquilezles.org/www/articles/smin/smin.htm
+// Polynomial smooth min 2 (k=0.1)
+float blendPolynomial2(float a, float b, float k)
+{
+    float h = max(k-abs(a-b), 0.)/k;
+    return min(a, b) - h*h*k*.25;
+}
+
 float rt = 1.,
     ms = 1.;
 vec3 scene(vec3 x)
@@ -93,13 +101,81 @@ vec3 scene(vec3 x)
         vec3 y = RR * x;
         sdf = add(vec3(5.,  dbox210(y, 1.2), 0.), vec3(1., -dbox3(x, 2.*c.xxx), 0.));
     }
-    else if(iTime < 1.e3) // Greetings
+    else if(iTime < 0.) // Greetings
     {
         float bbx = dbox3(x, vec3(1.,.4,.2));
-        sdf = add(vec3(6., bbx < 1.e-2?zextrude(x.z, mod(hardBeats, 2.) == 0. ? dbullencoolen(vec2(1.1,2.4)*(x.xy-.02*c.yx)):dpsycoholika(vec2(1.1,1.8)*x.xy), .1):bbx, 0.), vec3(1., -dbox3(x, 2.*c.xxx), 0.));
+        sdf = add(vec3(6., bbx < 1.e-2?zextrude(x.z, mod(hardBeats, 2.) == 0. ? dbullencoolen(vec2(1.1,2.4)*(x.xy-.01*c.yx)):dpsycoholika(vec2(1.1,1.7)*x.xy), .1):bbx, 0.), vec3(1., -dbox3(x, 2.*c.xxx), 0.));
     }
-    else if(iTime < 1.e3); // Metaballs in cube
-    else if(iTime < 1.e3); // 
+    else if(iTime < 0.) // Metaballs in cube
+    {
+        float bbx = length(x)-.5;
+
+        sdf = vec3(1., -dbox3(x, 2.*c.xxx), 0.);
+        if(bbx < 1.e-2)
+        {
+            float d = 1.;
+            for(int i=0; i<8; ++i)
+            {
+                RR = rot3(2.*(-.4+.8*hash31(4.*float(i+55)))*iTime*vec3(1.1,1.3,1.7) /*+13.31*hash31(4.*float(i))*/);
+                float da = length(RR*x-.15+.3*hash31(4.*float(i+2))) - .01-.2*hash11(4.*float(i+23));
+                d = blendPolynomial2(d, da, .05);
+            }
+            sdf = add(sdf, vec3(7., d, 0.));
+        }
+        else sdf = add(sdf, vec3(7., bbx, 0.));
+    }
+    else if(iTime < 0.) // Nippelball with tentacles = corona, fck covid text?
+    {
+        float bbx = length(x)-.5,
+            cc = .2;
+        
+        sdf = vec3(1., -dbox3(x, 2.*c.xxx), 0.);
+        
+        if(bbx<1.e-2)
+        {
+            RR = rot3(.4*iTime*vec3(1.1,1.3,1.7));
+            x = RR * x;
+            vec3 a;
+            vec2 ai;
+            ms = .32;
+            float d = length(x)-ms;
+            vec3 y = x;
+            for(int i=0; i<4; ++i)
+            {
+                mat3 RRa = rot3(2.*pi*(2.*hash31(float(i+23))-1.));
+                y = RRa * y;
+                ai = inverseSF(normalize(y), 40., a);
+                y -= a*ms*(1.+.05*cc);
+                ms *= cc;
+                float da = length(y)-ms;
+                d = min(d, da);
+                rt = da<1.e-4?float(i)+13.:rt;
+            }
+            sdf = add(sdf, vec3(8.,  d, 0.));
+        }
+        else sdf = add(sdf, vec3(8., bbx, 0.));
+    }
+    else if(iTime < 1.e3) // ribbons
+    {
+        sdf = vec3(1., -dbox3(x, 2.*c.xxx), 0.);
+
+        // Ribbonz
+        vec3 xs = c.yxy*x - .1*vec3(cos(3.*x.y-iTime), 0., sin(3.*x.y-iTime));
+        vec3 ns = vec3(cos(3.*x.y-iTime), 0., sin(3.*x.y-iTime));
+        mat3 m = ortho(ns),
+            mt = transpose(m);
+        vec3 y = mt * (x - xs);
+        y.x = abs(y.x)-.1;
+        y.z = abs(y.z)-.2;
+        sdf = add(sdf, vec3(9., dbox3(y, vec3(.003, .1, .1)), 0.));
+
+        // Spherez
+        float zs = .5;
+        vec3 z = vec3(x.x-xs.x, mod(x.y-.3*iTime, zs)-.5*zs, x.z-xs.z);
+        float zj = x.y-.3*iTime-z.y;
+        sdf = add(sdf, vec3( 10., length(z+xs.xyz*c.xyx-(.4*hash31(zj+12.35)-.2)*c.xyx)-(.3+.2*hash11(zj))*zs, 0.));
+    }
+    else if(iTime < 1.e3); // menger fractal
     else // Eye Tunnel
     {
         // Tube
@@ -300,6 +376,34 @@ bool ray(inout vec3 col, out vec3 x, inout float d, vec3 dir, out vec3 s, vec3 o
                 ads = vec3(.4,.4,.1);
                 r0 = .1;
                 col = mix(vec3(.9,.1,.3), .2*c.xxx, sm(abs(x.z)-.045));
+            }
+            else if(s.x == 7.) // Metaballs
+            {
+                ads = vec3(.4,.4,.1);
+                r0 = .1;
+                // col = vec3(.9,.1,.3);
+                col = mix(vec3(.9,.1,.3), .2*c.xxx, .5+.5*lfnoise(5.*x.xy));
+            }
+            else if(s.x == 8.) // Nippelball
+            {
+                ads = vec3(.4,.4,.1);
+                r0 = .1;
+                // col = vec3(.9,.1,.3);
+                col = mix(vec3(.9,.5,.3), .2*c.xxx, hash31(rt));
+            }
+            else if(s.x == 9.) // Ribbons
+            {
+                ads = vec3(.4,.4,.1);
+                r0 = .1;
+                // col = vec3(.9,.1,.3);
+                col = vec3(.9,.5,.3);
+            }
+            else if(s.x == 10.) // Spherez
+            {
+                ads = vec3(.4,.4,.1);
+                r0 = .1;
+                // col = vec3(.9,.1,.3);
+                col = .2*c.xxx;//vec3(.5,.9,.3);
             }
             
             // Schlick

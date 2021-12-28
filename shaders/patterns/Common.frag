@@ -61,6 +61,27 @@ vec2 hash22(vec2 p)
     return fract((p3.xx+p3.yz)*p3.zy);
 }
 
+// Created by David Hoskins and licensed under MIT.
+// See https://www.shadertoy.com/view/4djSRW.
+// float->float hash function
+float hash11(float p)
+{
+    p = fract(p * .1031);
+    p *= p + 33.33;
+    p *= p + p;
+    return fract(p);
+}
+
+// Created by David Hoskins and licensed under MIT.
+// See https://www.shadertoy.com/view/4djSRW.
+// float->vec3 hash function
+vec3 hash31(float p)
+{
+   vec3 p3 = fract(vec3(p) * vec3(.1031, .1030, .0973));
+   p3 += dot(p3, p3.yzx+33.33);
+   return fract((p3.xxy+p3.yzz)*p3.zyx); 
+}
+
 // Low-Frequency noise (value-type)
 float lfnoise(vec2 t)
 {
@@ -373,4 +394,90 @@ float dbox210(vec3 x, float size)
 	d = max(d, -dbox3(z-.119*c.xyy, vec3(.021,.08,.3)));
     
     return d * size;
+}
+
+// Originally from https://www.shadertoy.com/view/lllXz4
+// Modified by fizzer to put out the vector q.
+// Modified by NR4 to reduce size.
+// Inverse spherical fibonacci mapping tech by las/mercury
+vec2 inverseSF( vec3 p, float n, out vec3 outq ) 
+{
+    float m = 1. - 1./n,
+        phi = min(atan(p.y, p.x), pi), cosTheta = p.z,
+        k  = max(2., floor( log(n * pi * sqrt(5.) * (1.0 - cosTheta*cosTheta))/ log(PHI+1.))),
+        Fk = pow(PHI, k)/sqrt(5.0),
+        d,j;
+    vec2  F  = vec2( round(Fk), round(Fk * PHI) ),
+        ka = 2.*F/n,
+        kb = 2.*pi*( fract((F+1.0)*PHI) - (PHI-1.) ),
+        c;    
+    mat2 iB = mat2( ka.y, -ka.x, kb.y, -kb.x ) / (ka.y*kb.x - ka.x*kb.y);
+    
+    c = floor( iB * vec2(phi, cosTheta - m));
+    d = 8.;
+    j = 0.;
+    for( int s=0; s<4; s++ ) 
+    {
+        vec2 uv = vec2( float(s-2*(s/2)), float(s/2) );
+        
+        float i = round(dot(F, uv + c)),
+            phi = 2.0*pi*fract(i*PHI),
+            cosTheta = m - 2.0*i/n,
+            sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+        vec3 q = vec3( cos(phi)*sinTheta, sin(phi)*sinTheta, cosTheta );
+        float squaredDistance = dot(q-p, q-p);
+        
+        if (squaredDistance < d) 
+        {
+            outq = q;
+            d = squaredDistance;
+            j = i;
+        }
+    }
+    return vec2( j, sqrt(d) );
+}
+
+// 3D Point on a spline
+vec3 xspline3(vec3 x, float t, vec3 p0, vec3 p1, vec3 p2)
+{
+    return mix(mix(p0,p1,t),mix(p1,p2,t),t);
+}
+
+// 3D Distance to a point on a spline
+float dspline3(vec3 x, float t, vec3 p0, vec3 p1, vec3 p2)
+{
+    return length(x - xspline3(x, t, p0, p1, p2));
+}
+
+// 3D Normal in a point on a spline
+vec3 nspline3(vec3 x, float t, vec3 p0, vec3 p1, vec3 p2)
+{
+    return normalize(mix(p1-p0, p2-p1, t));
+}
+
+// Returns vec2(dmin, tmin).
+// 3D spline parameter of the point with minimum distance on the spline and sdf
+vec2 dtspline3(vec3 x, vec3 p0, vec3 p1, vec3 p2)
+{
+    vec3 E = x-p0, F = p2-2.*p1+p0, G = p1-p0;
+    E = clamp(cubic_zeros(vec4(dot(F,F), 3.*dot(G,F), 2.*dot(G,G)-dot(E,F), -dot(E,G))),0.,1.);
+    F = vec3(dspline3(x,E.x,p0,p1,p2),dspline3(x,E.y,p0,p1,p2),dspline3(x,E.z,p0,p1,p2));
+    return F.x < F.y && F.x < F.z
+        ? vec2(F.x, E.x)
+        : F.y < F.x && F.y < F.z
+            ? vec2(F.y, E.y)
+            : vec2(F.z, E.z);
+}
+
+// Compute an orthonormal system from a single vector in R^3
+mat3 ortho(vec3 d)
+{
+    vec3 a = normalize(
+        d.x != 0. 
+            ? vec3(-d.y/d.x,1.,0.)
+            : d.y != 0.
+                ? vec3(1.,-d.x/d.y,0.)
+                : vec3(1.,0.,-d.x/d.z)
+    );
+    return mat3(d, a, cross(d,a));
 }
