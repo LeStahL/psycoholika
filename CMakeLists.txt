@@ -38,17 +38,6 @@ get_filename_component(STDC_INCLUDE "${CMAKE_C_COMPILER}" DIRECTORY)
 set(STDC_INCLUDE "${STDC_INCLUDE}/../../../include")
 
 # Source lists
-set(MSX_SOURCES
-    oidos/oidos.asm
-    oidos/random.asm
-    oidos/play.asm
-
-    oidos/oidos.inc
-    oidos/platform.inc
-)
-set(MSX_TRACK_ASM
-    msx/music.asm
-)
 set(CHECK_GFX_SOURCES
     gfx/gfx.frag
 )
@@ -60,18 +49,7 @@ set(INTRO_SOURCES
 )
 
 # Build commands
-if(BUILD_OIDOS)
-    add_custom_target(oidos.obj ALL SOURCES "${PROJECT_SOURCE_DIR}/oidos/oidos.asm" COMMAND ${NASM} -fwin32 -o oidos.obj -i"${PROJECT_SOURCE_DIR}/oidos/" -i"${PROJECT_SOURCE_DIR}/msx/" "${PROJECT_SOURCE_DIR}/oidos/oidos.asm" COMMENT "Assembling oidos.obj...")
-    add_custom_target(random.obj ALL SOURCES "${PROJECT_SOURCE_DIR}/oidos/random.asm" COMMAND ${NASM} -fwin32 -o random.obj -i"${PROJECT_SOURCE_DIR}/oidos/" -i"${PROJECT_SOURCE_DIR}/msx" "${PROJECT_SOURCE_DIR}/oidos/random.asm" COMMENT "Assembling random.obj...")
-    add_custom_target(music.obj ALL COMMAND ${NASM} -fwin32 -i"${PROJECT_SOURCE_DIR}/msx" -o music.obj -i "${PROJECT_SOURCE_DIR}/oidos" "${PROJECT_SOURCE_DIR}/msx/music.asm" COMMENT "Assembling music.obj..." DEPENDS music.asm)
-    set(MUSIC_OBJECTS ${MUSIC_OBJECTS} oidos.obj random.obj music.obj)
-    set(MUSIC_DEFINE /DBUILD_OIDOS)
-else()
-    add_custom_target(4klang.obj ALL SOURCES ${MSX_SOURCES} COMMAND ${YASM} -f win32 -o 4klang.obj ${PROJECT_SOURCE_DIR}/4klang/4klang.asm COMMENT "Assembling 4klang.obj...")
-    set(MUSIC_OBJECTS ${MUSIC_OBJECTS} 4klang.obj)
-endif()
-
-add_custom_target(intro.obj ALL SOURCES ${INTRO_SOURCES} COMMAND ${CMAKE_CXX_COMPILER} "${PROJECT_SOURCE_DIR}/intro.cpp" /I\"${STDC_INCLUDE}\" /I"${CMAKE_CURRENT_BINARY_DIR}" /I"${PROJECT_SOURCE_DIR}/4klang" /I"${PROJECT_SOURCE_DIR}/gfx" /I"${PROJECT_SOURCE_DIR}/oidos" /DWIN32 /c /Gy /O1 /fp:fast /GR- /GS- /MT /Fo"intro.obj" ${MUSIC_DEFINE} COMMENT "Compiling intro.cpp..." DEPENDS gfx.h)
+add_custom_target(intro.obj ALL SOURCES ${INTRO_SOURCES} COMMAND ${CMAKE_CXX_COMPILER} "${PROJECT_SOURCE_DIR}/intro.cpp" /I"${PROJECT_SOURCE_DIR}/thirdparty/minimp3" /I\"${STDC_INCLUDE}\" /I"${CMAKE_CURRENT_BINARY_DIR}" /I"${PROJECT_SOURCE_DIR}/4klang" /I"${PROJECT_SOURCE_DIR}/gfx" /I"${PROJECT_SOURCE_DIR}/oidos" /DWIN32 /c /Gy /O1 /fp:fast /GR- /GS- /MT /Fo"intro.obj" ${MUSIC_DEFINE} COMMENT "Compiling intro.cpp..." DEPENDS gfx.h)
 
 add_custom_target(validate-gfx ALL SOURCES ${CHECK_GFX_SOURCES} COMMAND ${VALIDATOR} ${PROJECT_SOURCE_DIR}/gfx/gfx.frag COMMENT "Validating gfx.frag...")
 add_custom_target(gfx.h ALL SOURCES ${MINIFY_GFX_SOURCES} COMMAND ${MINIFIER} ${PROJECT_SOURCE_DIR}/gfx/gfx.frag -o gfx.h COMMENT "Minifying gfx.frag..." DEPENDS validate-gfx)
@@ -83,6 +61,6 @@ else()
     set(ADDITIONAL_OPTIONS /HASHTRIES:2400 /ORDERTRIES:20000 /TINYIMPORT /UNSAFEIMPORT /UNALIGNCODE)
 endif()
 
-add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CRINKLER} /ENTRY:demo /SUBSYSTEM:Windows /LARGEADDRESSAWARE /PROGRESSGUI /COMPMODE:${COMPMODE} /PRIORITY:NORMAL /REPORT:compress.htm ${ADDITIONAL_OPTIONS} intro.obj ${MUSIC_OBJECTS} opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj ${MUSIC_OBJECTS})
-# add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CMAKE_LINKER} /ENTRY:demo intro.obj ${MUSIC_OBJECTS} /SUBSYSTEM:Windows opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj ${MUSIC_OBJECTS})
+# add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CRINKLER} /ENTRY:demo /SUBSYSTEM:Windows /LARGEADDRESSAWARE /PROGRESSGUI /COMPMODE:${COMPMODE} /PRIORITY:NORMAL /REPORT:compress.htm ${ADDITIONAL_OPTIONS} intro.obj opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj)
+add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CMAKE_LINKER} /ENTRY:demo intro.obj /SUBSYSTEM:Windows vcruntime.lib opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj)
 # message("s" ${CMAKE_LINKER})

@@ -5,7 +5,7 @@ layout (location = 1) uniform int iPass;
 uniform sampler2D iChannel0;
 out vec4 out_color;
 
-const vec2 iResolution = vec2(1920., 1080.);
+const vec2 iResolution = vec2(1280., 720.);
 
 const vec3 c = vec3(1.,0.,-1.);
 const float pi = acos(-1.),
@@ -1285,6 +1285,7 @@ bool ray(inout vec3 col, out vec3 x, inout float d, vec3 dir, out vec3 s, vec3 o
         //d += s.y;
         //d += min(abs(s.y), 3.e-3);
         d += s.y<5.e-1?min(s.y,6.e-3):min(s.y,1.e-2);//min(s.y,1.e-3);
+        // d += s.y<5.e-1?min(s.y,6.e-3):min(s.y, 1.e-2);//min(s.y,1.e-3);
     }
     return false;
 }
