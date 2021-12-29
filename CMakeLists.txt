@@ -84,3 +84,5 @@ else()
 endif()
 
 add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CRINKLER} /ENTRY:demo /SUBSYSTEM:Windows /LARGEADDRESSAWARE /PROGRESSGUI /COMPMODE:${COMPMODE} /PRIORITY:NORMAL /REPORT:compress.htm ${ADDITIONAL_OPTIONS} intro.obj ${MUSIC_OBJECTS} opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj ${MUSIC_OBJECTS})
+# add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CMAKE_LINKER} /ENTRY:demo intro.obj ${MUSIC_OBJECTS} /SUBSYSTEM:Windows opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj ${MUSIC_OBJECTS})
+# message("s" ${CMAKE_LINKER})
