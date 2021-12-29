@@ -33,6 +33,16 @@ vec3 data[20] = vec3[20](
 
 // Created by David Hoskins and licensed under MIT.
 // See https://www.shadertoy.com/view/4djSRW.
+// vec3->float hash function
+float hash13(vec3 p3)
+{
+	p3  = fract(p3 * .1031);
+    p3 += dot(p3, p3.zyx + 31.32);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+// Created by David Hoskins and licensed under MIT.
+// See https://www.shadertoy.com/view/4djSRW.
 // vec2->float hash function
 float hash12(vec2 p)
 {
@@ -480,4 +490,25 @@ mat3 ortho(vec3 d)
                 : vec3(1.,0.,-d.x/d.z)
     );
     return mat3(d, a, cross(d,a));
+}
+
+float dbox3_wireframe(vec3 x, vec3 b, float db)
+{
+    float d = dbox3(x,b); 
+    d = max(d, -dbox3(x, b+c.zzx*db));
+    d = max(d, -dbox3(x, b+c.xzz*db));
+    return max(d, -dbox3(x, b+c.zxz*db));
+}
+
+// 3D line nearest parameter
+float tline3(vec3 x, vec3 p1, vec3 p2)
+{
+    vec3 da = p2-p1;
+    return clamp(dot(x-p1, da)/dot(da,da),0.,1.);
+}
+
+// 3D line distance
+float dline3(vec3 x, vec3 p1, vec3 p2)
+{
+    return length(x-mix(p1, p2, tline3(x,p1,p2)));
 }
