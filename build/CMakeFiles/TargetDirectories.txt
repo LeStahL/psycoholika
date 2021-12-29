@@ -1,0 +1,7 @@
+C:/Demo/psycoholika/build/CMakeFiles/4klang.obj.dir
+C:/Demo/psycoholika/build/CMakeFiles/intro.obj.dir
+C:/Demo/psycoholika/build/CMakeFiles/validate-gfx.dir
+C:/Demo/psycoholika/build/CMakeFiles/gfx.h.dir
+C:/Demo/psycoholika/build/CMakeFiles/aldi-Debug.exe.dir
+C:/Demo/psycoholika/build/CMakeFiles/ALL_BUILD.dir
+C:/Demo/psycoholika/build/CMakeFiles/ZERO_CHECK.dir

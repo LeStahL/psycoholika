@@ -1,0 +1,353 @@
+########### SYNTHS ###########
+
+osc  fm0         shape=fm
+main FM0         src=fm0 slidetime=.2
+
+osc fm1op2fb
+osc fm1op2   freq=.999*f phase=.35*fm1op2fb
+lfo fm1fb    shape=saw freq=2 mode=global,beat
+osc fm1op1   phase=fm1fb*fm1op2
+osc fm1sub1  shape=sin freq=.5*f
+osc  fm1sub2     freq=.501*f
+env  quickattack attack=0.01 hold=1 decay=1 sustain=0
+main FM1         src=quickattack*fm1op1+quickattack*0.4*fm1sub1+quickattack*0.4*fm1sub2 release=.1
+
+osc  somesaw1  shape=saw
+form somesawD1 detune src=somesaw1 factor=.99,0.967,0.96
+osc  somesaw2  shape=saw freq=.5*f phase=0.01
+form somesawD2 op=detune src=somesaw2 factor=0.95,1.03,1.02
+form somesaw   mix src=somesawD1+.6*somesawD2
+env  stutter   shape=expdecayrepeat exponent=16. beats=.125
+env  slowdec   shape=expdecay exponent=1.5
+main Supersaw  src=stutter*slowdec*somesaw
+
+random shp1     min=0   max=.1   digits=2   store
+random shp2     min=1   max=3    digits=2   store
+random maddcut  min=30  max=300  digits=2   store
+random maddcutq min=.01 max=9.99 digits=2   store
+random maddres  min=0   max=5    digits=2   store
+random maddresq min=.01 max=9.99 digits=2   store
+random maddpw   min=0   max=.99  digits=2   store
+random maddmix  min=-1  max=1    digits=2   store
+random madddet  min=0   max=.02  digits=2   store
+osc   id0001  shape=madd            nmax=200 ninc=1 mix=maddmix cutoff=maddcut q=maddcutq res=maddres resq=maddresq pw=maddpw detune=madddet
+form  id0002  waveshape src=id0001  amount=shp1*id1001 a=0 b=.8 c=.05 d=1 e=.9
+form  id0003  saturate  src=id0002  gain=shp2*id1001
+form  id0004  delay     src=id0003  number=1 delay=.02 gain=.01
+form  id0012  pitchshift src=id0001 steps=-12
+form  id0013  detune    src=id0004
+env   id1001  attack=1.3 release=.4
+main  StringM src=id1001*id0013+.4*id1001*id0004 release=.4 slidetime=.8
+
+#RANDOM FM MANIA
+random lev1 min=0 max=127 digits=0
+random lev2 min=0 max=127 digits=0
+random lev3 min=0 max=127 digits=0
+random lev4 min=0 max=127 digits=0
+random alg0 min=1 max=11  digits=0
+random fbk1 min=0 max=127 digits=0
+random fbk2 min=0 max=127 digits=0
+random fbk3 min=0 max=127 digits=0
+random fbk4 min=0 max=127 digits=0
+random att0 min=0 max=0.1 digits=3
+random hld0 min=0 max=0.1 digits=3
+random dec0 min=0 max=0.2 digits=3
+random sus0 min=0 max=1   digits=3
+random rel0 min=0 max=.2  digits=3
+random att2 min=0 max=.25 digits=3
+random dec2 min=0 max=.25 digits=3
+random hld2 min=0 max=.25 digits=3
+random sus2 min=0 max=.5  digits=3
+random att3 min=0 max=.25 digits=3
+random hld3 min=0 max=.25 digits=3
+random dec3 min=0 max=.25 digits=3
+random sus3 min=0 max=.5  digits=3
+random att4 min=0 max=.25 digits=3
+random hld4 min=0 max=.25 digits=3
+random dec4 min=0 max=.25 digits=3
+random sus4 min=0 max=.5  digits=3
+
+env    FManiaE2 attack=att2 decay=dec2 sustain=sus2 hold=hld2
+env    FManiaE3 attack=att3 decay=dec3 sustain=sus3 hold=hld3
+env    FManiaE4 attack=att4 decay=dec4 sustain=sus4 hold=hld4
+osc    FManiaA shape=fm lv1=lev1 lv2=FManiaE2*lev2 lv3=FManiaE3*lev3 lv4=FManiaE4*lev4 fr1=.5 fr3=1.001 fb1=fbk1 fb2=fbk2 fb3=fbk3 fb4=fbk4 algo=alg0 parscale=127
+env    FManiaE attack=att0 decay=dec0 sustain=sus0 hold=hld0 release=rel0
+form   FManiaB op=chorus src=FManiaA number=3 step=4e-3 intensity=3. rate=0.1
+main   FMania  src=FManiaB*FManiaE release=.4 slidetime=.1337
+
+#1/127 = 7.87e-3
+const  vel1       pow(vel,12.*7.87e-3)
+const  vel2       pow(vel,63.*7.87e-3)
+const  vel3       pow(vel,26.*7.87e-3)
+const  vel4       pow(vel,120.*7.87e-3)
+env    fienv      attack=.001 release=.3
+#env    fienv      attack=.002
+osc    FeelItbase shape=fm lv1=127*vel1 lv2=112*vel2 lv3=127*vel3 lv4=96*vel4 fr1=.5 fr3=1.5 fb4=50 algo=8 parscale=127
+form   FeelIto    op=overdrive src=FeelItbase gain=1.6
+form   FeelItd    op=waveshape src=FeelIto amount=.3 a=.2 b=.8 c=.4 d=.8 e=.8
+form   FeelItch   op=chorus src=FeelItd number=3 step=2e-3 intensity=2. rate=0.15
+#main   FM         src=FeelItbase release=.2
+main   FM         src=.8*fienv*FeelItch release=.15 slidetime=.25
+
+osc  S01    shape=sin freq=f
+gac  G01    offset=0 const=1. lin=2. quad=-.5 sin=3. sin_coeff=2. exp=2. exp_coeff=-.25 mode=global
+form S01w   op=waveshape src=S01 amount=1. a=0.01 b=0.7 c=0.1 d=0.6 e=0.8
+main WShape src=S01-.1*G01*S01+.1*G01*S01w slidetime=.3
+
+filter Fsaw      shape=resolp src=somesaw1 cutoff=200 res=.4
+main   resolpsaw src=Fsaw
+
+#filter Fsaw2       shape=allpass src=somesaw1 gain=.8 ndelay=3
+lfo    stutter2    shape=squ freq=8 phase=.125
+form   stuttersaw1 op=mix src=stutter2*somesaw1
+filter Fsaw2       shape=comb src=stuttersaw1 iir_gain=.5*.5*.5 iir_n=3 fir_gain="pow(.9,5.)" fir_n=5
+main   combsaw     src=Fsaw2
+
+form   stuttersaw12  op=pitchshift src=stuttersaw1 steps=12
+env    short         shape=expdecay exponent=8
+form   stuttersaw12e mix src=short*stuttersaw12
+filter Fsaw3         shape=reverb src=stuttersaw12e iir_gain=0.1 iir_delay1=0.00297 iir_delay2=0.00371 iir_delay3=0.00411 iir_delay4=0.00437 ap_gain=0.3 ap_delay1=0.00017 ap_delay2=0.0005
+main   revsaw        src=Fsaw3 release=1.3 relpower=.005
+
+# not implemented for now (karplus-strong-guitar)
+#osc ksguitar guitar f
+#main KStrong ksguitar
+
+main justsaw src=somesaw1
+
+lfo    sweep  shape=sin freq=.25 scale=1500 shift=2000 mode=global
+filter BPsaw1 shape=bandpass src=somesaw1 center=sweep bandwidth=10 N=100
+env    BPenv  attack=0.002 decay=.15 sustain=.25 release=0.13
+main   BPsaw  src=BPenv*BPsaw1 slidetime=.115 release=0.70
+
+env    stringenv    attack=0.2 decay=0.3 sustain=0.8 release=0.2
+lfo    stringvib    shape=sin freq=5.
+form   fvib         mix src=f+0.3*stringvib*stringenv
+osc    saw2         shape=saw freq=fvib
+form   saw2D        op=detune src=saw2 factor=1.01, 1.011, .98
+env    stringfilter attack=0.5 decay=0.5 sustain=0.4 release=0. mode=beat
+filter Fstr         shape=resolp src=saw2D cutoff=300*stringfilter
+main   stryngth1    src=stringenv*Fstr release=0.2
+
+osc    A1osc3    shape=tri freq=.5*f
+osc    A1osc2    shape=saw freq=2*f phase=.4*A1osc3
+osc    A1osc1    shape=squ freq=.25*f phase=0.25 pw=0.2*A1osc2
+form   A1osc1d   detune src=A1osc1 factor=1.004
+env    shortenv  attack=0.0 hold=0.2 decay=0.2 sustain=0
+form   A1oscmix  mix src=A1osc1d+0.8*A1osc2
+form   A1oscmixW waveshape src=A1oscmix amount=A1osc2 a=0.1 b=.3 c=0.3 d=0.8 e=0.8
+env    shortdec  attack=0.0001 hold=0.0001 decay=0.4 sustain=0
+filter A1oscmixF shape=resolp src=A1oscmixW cutoff=800*shortdec res=.1
+main   PercBass  src=shortenv*A1oscmixF*5.
+
+env A14_env    attack=2 decay=0 sustain=.2 release=2 mode=beat
+env A14_fenv   attack=2 decay=0 sustain=1 release=2 mode=beat scale=600 shift="40.*sqrt(f)"
+osc A14_osc    shape=madd freq=f nmax=200 ninc=1 mix=1 cutoff=A14_fenv Q=30 res=0 resQ=0.1 detune=-.01
+form A14_oscA  mix src=0.5*A14_env*A14_osc
+form A14_oscAD overdrive src=A14_oscA gain=1.4
+main A14_Kuh   src=A14_env*A14_oscAD release=2
+
+env  A15_env   attack=3 decay=0 sustain=0.2 release=2 mode=beat
+env  A15_fenv  attack=2 decay=0 sustain=1 release=2 scale=100 shift="20.*sqrt(f)"
+osc  A15_osc1  shape=madd freq=f phase=0 nmax=200 ninc=1 mix=-1 cutoff=A15_fenv Q=50 res=0 detune="0.01-0.008*_sin(0.25*Bproc+.25)" pw=0
+osc  A15_osc2  shape=madd freq=f phase=0 nmax=200 ninc=1 mix=1  cutoff=A15_fenv Q=30 res=0 detune=-.01 pw="0.1+0.06*_sin(0.25*_t)"
+form A15_oscA  mix src=0.2*A15_osc1+0.3*A15_osc2
+form A15_oscAD overdrive src=A15_oscA gain=1.4
+main A15_Kuh   src=A15_env*A15_oscAD release=2
+
+env A16_env     attack=1.5 decay=2 sustain=.2 release=.8
+osc A16_osc1    shape=saw freq=f phase=A16_lfo1
+osc A16_osc2    shape=saw freq=f phase=.25
+osc A16_osc3    shape=saw freq=f phase=A16_lfo3
+lfo A16_lfo3    shape=sin freq=.5 scale=.2 shift=0 mode=time
+lfo A16_lfo1    shape=sin freq=2 scale=.1 shift=.1 mode=time
+main A16_Supsaw src=0.5*A16_env*A16_osc1+A16_env*A16_osc2+A16_env*A16_osc3 release=.8
+
+env A17_env attack=1.5 decay=2 sustain=0.2 release=0.8
+env A17_fenv attack=1.5 decay=2.5 sustain=0.2 release=10 scale=100 shift=200
+osc A17_osc shape=madd freq=f nmax=200 ninc=1 mix=-1 cutoff=A17_fenv q=20 res=0.3 resq=3. detune=0.015 pw=0
+main A17_pad? src=A17_env*A17_osc release=.8
+
+
+osc A10_1 shape=tri freq=2*f
+lfo A10_lfo1 shape=sin freq=4 scale=.00001 shift=1
+osc A10_2 shape=tri freq=0.999*2*A10_lfo1*f
+osc A10_3 shape=saw freq=5.01*f scale=0.2
+osc A10_4 shape=saw freq=14.01*f scale=0.2
+main A10_saws src=A10_1+A10_2+.2*A10_3+.2*A10_3
+
+lfo A13_lfo shape=sin freq=0.21 scale=.5 shift=.2
+osc A13_osc2 shape=sin freq=0.25*f
+osc A13_osc shape=sin freq=4*f phase=A13_lfo*A13_osc2
+main A13_whatev src=A13_osc
+
+env M8_env shape=adsrexp attack=0.75 decay=0.5 sustain=0.1 release=0.8 mode=beat
+env M8_fenv shape=adsrexp attack=0.5 decay=0.5 sustain=0.1 release=10 scale=4500 shift=500 mode=beat
+osc M8_osc shape=madd freq=f phase=0 nmax=200 ninc=1 mix=-1 cutoff=M8_fenv Q=20 res=0 resq=0 detune=0.018 pw=0
+form M8_oscDQ op=quantize src=M8_osc bits=128
+form M8_oscDL lofi src=M8_oscDQ bits=8
+form M8_oscDLC chorus src=M8_oscDL number=6 step=2e-3 intensity=1e-3 rate=20
+main M8yStrng src=M8_env*M8_oscDL release=0.8
+
+form bitdrop op=mix src=1024+-512*Bproc
+osc M8bass_osc1 shape=squ freq=f
+osc M8bass_osc2 shape=squ freq=.97*f phase=.3 pw=.3
+form M8bass_osc op=mix src=M8bass_osc1,M8bass_osc2
+form M8bass_oscQ op=quantize src=M8bass_osc bits=bitdrop
+main M8yBeast src=M8bass_oscQ
+
+lfo A31_envlfo shape=sin freq=8. mode=beat overdrive=8
+osc A31_osc1 shape=tri freq=f
+osc A31_osc2 shape=sin freq=.5*f
+osc A31_osc3 shape=saw freq=2.*f
+osc A31_osc4 shape=tri freq=f phase=A31_lfo4
+osc A31_osc5 shape=tri freq=.999*f phase=A31_lfo5
+lfo A31_lfo4 shape=tri freq=0.5 scale=2e-4 shift=.01
+lfo A31_lfo5 shape=tri freq=0.33 scale=1e-3 shift=.05
+form A31_mix mix src=.35*A31_osc1 + .3*A31_osc2 + .05*A31_osc3 + .35*A31_osc4 + .5*A31_osc5
+main M8yBuzz src=A31_envlfo*A31_mix
+
+env A32dec shape=expdecay exponent=15.
+form A32_mix op=chorus src=A31_mix number=2 step=2e-4 intensity=2e-2 rate=.125 mode=beat
+form A32_mixT op=pitchshift src=A32_mix steps=24
+form A32_mixD delay src=A32_mixT number=3 delay=1. gain=.0001 mode=beat
+main M8yBuzz2 src=.5*A32dec*A32_mix + A32dec*A32_mixD release=.5
+
+lfo A24_envlfo shape=fract freq=16 overdrive=2.5
+osc A24_osc1 shape=saw freq=.99*f
+osc A24_osc2 shape=squ freq=.5*f pw=0.2
+osc A24_osc3 shape=sin freq=.48*f phase=.25
+form A24_mix mix src=0.7*A24_envlfo*A24_osc1 + 0.7*A24_envlfo*A24_osc2 + 0.7*A24_envlfo*A24_osc3 + -.35
+main A24_ILike src=A24_mix
+
+lfo A24_someenv shape=fract freq=-16 phase=.5 scale=300 shift=200 overdrive=4
+env A24_someenv2 shape=adsr attack=0 decay=0.2 sustain=0.2 release=0.5
+form A24_dep mix src=200.+.3*f
+filter A24_lp shape=resolp src=A24_mix cutoff=A24_dep res=.3
+main M8_ILike2 src=A24_someenv*A24_someenv2*A24_lp release=.01
+
+# madd: mix= (-1 für saw, 0 für tri, sq für 1, HÄ? für 2)
+# macesaw(t, f, filterCO, Q, 0.010, 0.020, 0.015, 3.);
+# osc A16_osc1 madd f 0 200 1 -1 filterCO Q filterRes filterResQ detune PW
+
+########### DRUMS ###########
+
+random f0 min=50  max=80  digits=1
+random f1 min=100 max=150 digits=1
+drum        BDbody shape=kick freq_start=f1 freq_end=f0 freq_decay=0.1 attack=0.1 hold=0.1 decay=0.3 click_amp=1.2 click_delay=.05 click_timbre=.8 overdrive=10
+maindrum    BD1 src=BDbody
+
+drum BDbody2 shape=kick2 freq_start=200 freq_end=50 freq_decay=0.12 attack=0.015 hold=0.1 decay=0.15 click_amp=0.4 click_delay=0.03 click_timbre=1. sq_phase=5 sq_nmax=10 sq_mix=0.8 sq_inr=1 sq_ndecay=1 sq_res=1 sq_resq=.1 sq_detune=.1
+maindrum BD2 src=3.*BDbody2
+
+drum shaker shape=fmnoise attack=0.03 decay=0.1 sustain=0.1 timbre1=0.9 timbre2=0.9
+maindrum SHK src=.2*shaker
+
+#drum sumnois shape=fmnoise attack=0.0 decay=0.01 sustain=1.
+#filter lpnoise shape=resolp src=sumnois cutoff=9000 res=.1
+#maindrum LP_NOISE src=lpnoise release=.4
+
+drum hut shape=fmnoise attack=0 decay=0.05 sustain=0 timbre1=.3 timbre2=2
+lfo acclfo shape=squ freq=4. mode=beat,global shift=.6 scale=.25
+maindrum HAT src=.4*acclfo*hut
+
+drum snr shape=snare freq0=6000 freq1=800 freq2=350 freqdecay0=0.01 freqdecay1=0.01 decay=0.25 sustain=0.3 release=0.1 noise_amount=.7 noise_attack=0.05 noise_decay=0.3 noise_sustain=0.3 overdrive=1.6
+maindrum SNR src=snr
+
+filter snrrev shape=reverb src=snr iir_gain=0.15 iir_delay1=0.000297 iir_delay2=0.000371 iir_delay3=0.000411 iir_delay4=0.000437 ap_gain=0.2 ap_delay1=0.000017 ap_delay2=0.00005
+maindrum RVRBSNER src=snrrev release=1
+
+#osc crsh_noise shape=noise freq=0 phase=2.*crsh_osc2+-5.
+osc crsh_noise shape=lpnoise freq=10396
+form crsh_noise_mod sinshape src=crsh_noise amount=.3 parts=7
+osc crsh_noise2 shape=noise freq=2.5
+osc crsh_osc1 shape=tri freq=1301 phase=crsh_env2*.8*crsh_noise+2.*crsh_osc2*crsh_env1
+osc crsh_osc2 shape=saw freq=4920
+osc crsh_osc3 shape=tri freq=325 phase=.4*crsh_noise2
+env crsh_env1 attack=.3 hold=.1 decay=.6 sustain=.2
+env crsh_env2 attack=.21 hold=.18 decay=.54 sustain=.2 release=.3
+env crsh_env0 shape=expdecay exponent=8
+#maindrum crash src=crsh_env0*crsh_osc1
+maindrum crash src=crsh_noise_mod*crsh_env0
+
+maindrum    ASSK2    src="vel*(clamp(1.32*_tri(drop_phase(_PROG,.06,308.,80.)),-1.,1.)*(1.-smoothstep(-1e-3,0.,_PROG-.15))+.82*clamp(.49*_tri(drop_phase(_PROG,.06,308.,80.)+.82*lpnoise(_PROG,4595.)),-1.,1.)*exp(-1.97*_PROG)+.09*lpnoise(_PROG,4032.)*(1.-smoothstep(0.,.97,_PROG-.79))+.1*lpnoise(_PROG,1111.)*exp(-_PROG*12.69)+.6*lpnoise(_PROG,7795.)*exp(-_PROG*1.08))*smoothstep(0.,.003,_PROG)" release=.00 relpower=1 slidetime=.125
+
+env lin_sweep shape=linear scale=6 shift=1 mode=relative
+osc noise_sweep shape=lpnoise freq=80000
+osc noise_low shape=lpnoise freq=1000
+form noise_shape sinshape src=noise_low amount=lin_sweep parts=23
+maindrum SWEEP src=noise_shape
+
+param  someshit  segments=someseg,1,8 default=4
+seg someseg shape=linear from=0,0 to=8,2
+env testdecay expdecay decay=.33
+osc testsomeshit shape=sin freq=f overdrive=.5*someshit
+form testsomeshape sinshape src=testsomeshit amount=someshit parts=7
+osc testsomeshitA shape=sin freq=.5*f overdrive=.5*someshit
+osc testsomeshit1 shape=badd freq=.5*f mix=.8 amp=3 peak=300 sigma=50 ncut=8 detune=.001
+osc testsomeshit2 shape=badd freq=.5*f mix=.8 amp=3 peak=400 sigma=10 ncut=4 detune=.001
+osc testsomeshit3 shape=badd freq=f mix=.8 amp=3 peak=1000 sigma=100 ncut=3 detune=.005
+main SOMESHIT src=.1*testsomeshitA*testdecay+.2*testsomeshape*testdecay !+testsomeshit1+testsomeshit2+testsomeshit3 release=.05
+
+osc testsomesin shape=sin freq=.5*f overdrive=2
+form testsomemod modsync src=testsomesin freq=someshit*f
+main SOMEMOD src=testsomemod release=.05
+
+env carp_env01 attack=.125 sustain=1
+env carp_env02 attack=.1+.001*aux
+env carp_env03 attack=.05+.006*aux
+osc carp_osc01 shape=tri freq=f phase=0.005*aux*carp_env01*carp_osc02+0.01*aux*carp_env03*carp_osc03
+osc carp_osc02 shape=saw freq=.5*f
+osc carp_osc03 shape=saw freq=1.51*f overdrive=.8
+osc carp_sub01 shape=sin freq=.499*f overdrive=.4
+form carp_frm02 sinshape src=carp_osc01+.6*carp_sub01 amount=0.2+0.03*aux*vel
+form carp_frm03 quantize bits=7888 src=carp_frm02
+form carp_frm01 chorus src=.5*carp_frm02 number=2 step=.1 intensity=.1 rate=.025*SPB
+main carp src=carp_env02*carp_frm01+.5*carp_frm03*carp_env02 release=.15 slidetime=.08
+
+env pling_env00 shape=expdecay exponent=11
+env pling_env01 attack=1e-2 hold=0 decay=.1+.5*vel sustain=.01 release=.4
+env pling_env02 attack=.5 hold=1
+env pling_env03 attack=.325 hold=1
+env pling_env04 attack=0 hold=0 decay=.2+.2*vel sustain=.01 release=.4
+env pling_env05 attack=0 hold=0 decay=.05 sustain=0
+osc pling_osc01 shape=tri freq=f overdrive=pling_env00 phase=.2*pling_env02*pling_osc02+.2*vel*pling_env03*pling_osc03
+osc pling_osc02 shape=squ overdrive=3 freq=1.99*f pw=.3+2*vel+.2*pling_osc03
+osc pling_osc03 shape=saw freq=3.97*f
+osc pling_osc05 shape=lpnoise freq=6000+200*note
+form pling_frm01 sinshape src=pling_osc01 amount=0.01*aux*pling_env00 parts=5
+main pling src=pling_env00*pling_env01*pling_frm01+.4*pling_env00*pling_env03*pling_osc02*pling_env04+.4*pling_env05*pling_osc05 release=.4 relpower=2
+
+main    pling.0    src="theta(_BPROG)*exp(-11.*_BPROG)*env_AHDSR(_BPROG,L,.01,0.,.1+.5*vel,.01,.4)*clip((1.+theta(_BPROG)*exp(-11.*_BPROG))*_tri(f*_PROG+.2*env_AHDSR(_BPROG,L,.5,1.,.1,1.,0.)*clip((1.+3.)*_sq_(1.99*f*_PROG,.3+2.*vel+.2*(2.*fract(3.97*f*_PROG+0.)-1.)))+.2*vel*env_AHDSR(_BPROG,L,.325,1.,.1,1.,0.)*(2.*fract(3.97*f*_PROG+0.)-1.)))+.4*theta(_BPROG)*exp(-11.*_BPROG)*env_AHDSR(_BPROG,L,.325,1.,.1,1.,0.)*clip((1.+3.)*_sq_(1.99*f*_PROG,.3+2.*vel+.2*(2.*fract(3.97*f*_PROG+0.)-1.)))*env_AHDSR(_BPROG,L,0.,0.,.2+.2*vel,.01,.4)+.4*env_AHDSR(_BPROG,L,0.,0.,.05,0.,0.)*lpnoise(_PROG+0.,6000.+200.*note_pitch(_note))" release=.4 relpower=2 slidetime=.125
+main    pling.1    src="theta(_BPROG)*exp(-11.*_BPROG)*env_AHDSR(_BPROG,L,.01,0.,.1+.5*vel,.01,.4)*clip((1.+theta(_BPROG)*exp(-11.*_BPROG))*_tri(f*_PROG+.2*env_AHDSR(_BPROG,L,.5,1.,.1,1.,0.)*clip((1.+3.)*_sq_(1.99*f*_PROG,.3+2.*vel+.2*(2.*fract(3.97*f*_PROG+0.)-1.)))+.2*vel*env_AHDSR(_BPROG,L,.325,1.,.1,1.,0.)*(2.*fract(3.97*f*_PROG+0.)-1.)))+.4*theta(_BPROG)*exp(-11.*_BPROG)*env_AHDSR(_BPROG,L,.325,1.,.1,1.,0.)*clip((1.+3.)*_sq_(1.99*f*_PROG,.3+2.*vel+.2*(2.*fract(3.97*f*_PROG+0.)-1.)))*env_AHDSR(_BPROG,L,0.,0.,.2+.2*vel,.01,.4)+.4*env_AHDSR(_BPROG,L,0.,0.,.05,0.,0.)*lpnoise(_PROG+0.,6000.+200.*note_pitch(_note))" release=.4 relpower=2 slidetime=.125
+maindrum    crash0    src="theta(_BPROG)*exp(-3.*_BPROG)*_tri(9301.*_PROG+env_AHDSR(_BPROG,L,.21,.18,.54,.2,.3)*.1*pseudorandom(1.*_PROG+0.)+10.*(2.*fract(3920.*_PROG+.4*pseudorandom(1.*_PROG+0.))-1.)*env_AHDSR(_BPROG,L,.3,.1,.6,0.,0.))" release=0 relpower=1 slidetime=.125
+
+env brasspad_env1 shape=linear shift=100 scale=600
+env brasspad_env0 shape=linear shift=-1 scale=.6 mode=relative
+env brasspad_env2 attack=.2 sustain=1 release=.2
+osc brasspad_osc0 shape=madd nmax=32 mix=brasspad_env0 cutoff=brasspad_env1 q=100 res=5 resq=100
+form brasspad_frm0 detune src=brasspad_osc0 factor=1.01,2.005,4.02,.49
+form brasspad_frm2 mix src=brasspad_osc0*.3+.7*brasspad_frm0
+form brasspad_frm1 delay src=brasspad_frm2 number=3 delay=.064 gain=.38
+main brasspad src=brasspad_env2*brasspad_frm1 release=.2
+
+env choirpad_env2 attack=.2 sustain=1 release=.2
+osc choirpad_osc0 shape=badd mix=-1 amp=1 peak=1234 sigma=300 ncut=4 detune=0.1
+osc choirpad_osc1 shape=badd mix=-1 amp=1 peak=2638 sigma=1000 ncut=4 detune=0.07
+form choirpad_frm0 detune src=choirpad_osc0+choirpad_osc1 factor=1.01,2.005,.49
+form choirpad_frm2 mix src=choirpad_osc0*.3+.7*brasspad_frm0
+form choirpad_frm1 delay src=choirpad_frm2 number=3 delay=.064 gain=.38
+main choirpad src=choirbad_env2*choirpad_frm2 release=.25
+
+env bracepad_env1 attack=.05 decay=.15 sustain=.01 release=.3
+env bracepad_env0 attack=.185 sustain=1
+env bracepad_env2 attack=.05 decay=.1 sustain=.4 release=.2
+lfo bracepad_lfo0 shape=sin freq=10 mode=beat
+osc bracepad_osc0 shape=madd nmax=32 mix=bracepad_env0+-1+.2*bracepad_env2*bracepad_lfo0 cutoff=bracepad_cutoff*bracepad_env1 q=.1 res=100 resq=10000 detune=bracepad_lfo0*bracepad_env0*"0.075/f"
+osc bracepad_osc1 shape=sin freq=.5*f phase=.4*bracepad_lfo0
+form bracepad_frm0 detune src=bracepad_osc0 factor=1.01,2.005,4.02,.49
+form bracepad_frm2 mix src=bracepad_osc0*.3+.7*brasspad_frm0
+form bracepad_frm1 delay src=bracepad_frm2 number=3 delay=.064 gain=.38
+main bracepad src=bracepad_env2*bracepad_osc0+bracepad_sub*bracepad_env2*bracepad_osc1 release=.5 stereodelay=.003
+param bracepad_cutoff default=1
+param bracepad_sub default=0

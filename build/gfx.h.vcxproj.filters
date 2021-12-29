@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Demo\psycoholika\build\CMakeFiles\f744af045f57f96aee37560ee4ffa263\gfx.h.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Demo\psycoholika\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Demo\psycoholika\gfx\gfx.frag" />
+    <None Include="C:\Demo\psycoholika\build\CMakeFiles\gfx.h">
+      <Filter>Header Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{B09C659A-3A45-32EB-B25B-53BB6932F974}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{50A65772-D218-3D54-B3AF-39B8106625B1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
