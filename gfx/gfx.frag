@@ -10,10 +10,10 @@ const vec2 iResolution = vec2(1280., 720.);
 const vec3 c = vec3(1.,0.,-1.);
 const float pi = acos(-1.),
     PHI = 1.618,
-    bpm = 45.;
+    bpm = .5*148.,
+    spb = 60./bpm;
 float scale,
     nbeats,
-    spb,
     stepTime,
     hardBeats;
 mat3 RR;
@@ -42,17 +42,17 @@ vec3 data[20] = vec3[20](
 const float fsaa = 144.;
 
 // End times
-const int ntimes = 9;
+const int ntimes = 8;
 const float times[ntimes] = float[ntimes](
-    10., // Cube 210
-    20., // Bullencoolen
-    30., // Metaballs
-    40., // Nippelbrokkoli
-    50., // Ribbons
-    60., // Polytopes
-    80., // Empty tunnel
-    90., // Rettungsringe
-    100. // Happy new year
+    15.*spb, // Cube 210
+    30.*spb, // Bullencoolen
+    45.*spb, // Metaballs
+    60.*spb, // Nippelbrokkoli
+    75.*spb, // Ribbons
+    90.*spb, // Polytopes
+    110.*spb, // Mod shit
+    120.*spb // Empty tunnelmod
+    // 125.*spb // Happy new year
 );
 // const float times[8] = float[8](0.,0.,0.,0.,0.,1.e3,0.,0.);
 
@@ -816,10 +816,10 @@ vec3 scene(vec3 x)
         if(bbx < 1.e-2)
         {
             float d = 1.;
-            for(int i=0; i<8; ++i)
+            for(int i=0; i<18; ++i)
             {
                 RR = rot3(2.*(-.4+.8*hash31(4.*float(i+55)))*iTime*vec3(1.1,1.3,1.7) /*+13.31*hash31(4.*float(i))*/);
-                float da = length(RR*x-.15+.3*hash31(4.*float(i+2))) - .01-.2*hash11(4.*float(i+23));
+                float da = length(RR*x-.15+.3*hash31(4.*float(i+2))) - .01-.1*hash11(4.*float(i+23));
                 d = blendPolynomial2(d, da, .05);
             }
             sdf = add(sdf, vec3(7., d, 0.));
@@ -1231,7 +1231,7 @@ bool ray(inout vec3 col, out vec3 x, inout float d, vec3 dir, out vec3 s, vec3 o
             }
             else if(s.x == 3.) // Polyhedra color part
             {
-                col = mix(vec3(.4,.6,.05), .2*c.xxx, hash11(rt));
+                col = mix(vec3(.1,.6,.05), .2*c.xxx, hash11(rt));
                 r0 = .1;
                 ads = vec3(.8,.4, .1);
             }
@@ -1320,7 +1320,6 @@ bool ray(inout vec3 col, out vec3 x, inout float d, vec3 dir, out vec3 s, vec3 o
 
 void main()
 {
-    spb = 60./bpm;
     stepTime = mod(iTime+.5*spb, spb)-.5*spb;
     nbeats = (iTime-stepTime+.5*spb)/spb + smoothstep(-.2*spb, .2*spb, stepTime);
     scale = smoothstep(-.3*spb, 0., stepTime)*smoothstep(.3*spb, 0., stepTime);
@@ -1401,7 +1400,7 @@ void main()
         {
             float bbx = dbox2(z, vec2(2.28, .1));
             col = mix(col, mix(col, c.xxx, .5), sm(bbx));
-            col = mix(col, c.yyy, sm(dorgelsaft(3.*z)));
+            col = mix(col, c.yyy, sm(dorgelsaft(vec2(2.5, 3.)*z)));
             // col = mix(col, c.xxx, sm(abs(bbx)-.001));
         }
         else if(iTime < times[3])
@@ -1421,7 +1420,8 @@ void main()
         col = hsv2rgb(rgb2hsv(col)*vec3(lfnoise(2.*nbeats*c.xx),1.,1.));
         col = mix(col, 1.5*col, scale);
 
-        col *= smoothstep(0., 1., iTime); // TODO: Add fade to black
+        // Fade from and to black
+        col *= smoothstep(0., 1., iTime) * smoothstep(130., 128., iTime); 
 
         // scene transitions
         for(int i=0; i<ntimes; ++i)
