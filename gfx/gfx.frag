@@ -785,9 +785,15 @@ vec3 scene(vec3 x)
     }
     else if(iTime < times[1]) // Greetings
     {
+        sdf = vec3(1., -dbox3(x, 2.*c.xxx+1.*c.xyy), 0.);
         float bbx = dbox3(x, vec3(.7,.1,.11));
-        sdf = add(vec3(5., bbx < 1.e-2?zextrude(x.z, mod(floor(hardBeats/2.), 2.) == 0. ? dbullencoolen(vec2(1.1,2.4)*(x.xy-.01*c.yx)) + .005:dpsycoholika(vec2(1.1,1.7)*x.xy) + .005, .1):bbx, 0.), vec3(1., -dbox3(x, 2.*c.xxx+1.*c.xyy), 0.));
-        sdf = add(sdf, vec3(6., bbx < 1.e-2?zextrude(x.z, mod(floor(hardBeats/2.), 2.) == 0. ? dbullencoolen(vec2(1.1,2.4)*(x.xy-.01*c.yx)) - .01:dpsycoholika(vec2(1.1,1.7)*x.xy) - .01, .05):bbx, 0.));
+        if(bbx < 1.e-2)
+        {
+            float d = mod(floor(hardBeats/2.), 2.) == 0. ? dbullencoolen(vec2(1.1,2.4)*(x.xy-.01*c.yx)) + .005:dpsycoholika(vec2(1.1,1.7)*x.xy) + .005;
+            sdf = add(sdf, vec3(5., zextrude(x.z, d, .1), 0.));
+            sdf = add(sdf, vec3(6., zextrude(x.z, d - .01, .05), 0.));
+        }
+        else sdf = add(sdf, vec3(6., bbx, 0.));
     }
     else if(iTime < times[2]) // Metaballs in cube
     {
