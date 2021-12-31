@@ -26,6 +26,68 @@
 #include <Shlwapi.h>
 #include <gl/GL.h>
 #include "glext.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
+int frame = 0;
+int screenshot(char *fileName)
+{    
+    static unsigned char header[54] = {
+    0x42, 0x4D, 0x36, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    unsigned char *pixels = (unsigned char *) malloc(WIDTH * HEIGHT * 3);
+    ((unsigned __int16 *) header)[ 9] = WIDTH;
+    ((unsigned __int16 *) header)[11] = HEIGHT;
+
+    glReadPixels(0,0,WIDTH,HEIGHT,GL_RGB,GL_UNSIGNED_BYTE,pixels);
+
+    unsigned char temp;
+    for (unsigned int i = 0; i < WIDTH * HEIGHT * 3; i += 3)
+    {
+        temp = pixels[i];
+        pixels[i] = pixels[i + 2];
+        pixels[i + 2] = temp;
+    }
+
+    HANDLE FileHandle;
+    unsigned long Size;
+
+    if (fileName == NULL)
+    {
+        char file[256];
+        do 
+        {
+            char buf[100];
+            SYSTEMTIME st;
+            GetLocalTime(&st);
+            sprintf(buf, "%.8d", frame);
+//             printf("buf: %s\n", buf);
+            sprintf(file,"Screenshot%s.bmp",buf);
+//             printf("file: %s\n", file);
+            FileHandle = CreateFile(file,GENERIC_WRITE,0,NULL,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,NULL);
+        } while (FileHandle == INVALID_HANDLE_VALUE);
+    } 
+    else 
+    {
+        FileHandle = CreateFile(fileName,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
+        if (FileHandle == INVALID_HANDLE_VALUE) return 0;
+    }
+
+    WriteFile(FileHandle,header,sizeof(header),&Size,NULL);
+    WriteFile(FileHandle,pixels,WIDTH * HEIGHT * 3,&Size,NULL);
+
+    CloseHandle(FileHandle);
+
+    free(pixels);
+
+	++frame;
+
+    return 1;
+}
 
 #define MINIMP3_ONLY_MP3
 #define MINIMP3_IMPLEMENTATION
@@ -176,11 +238,13 @@ void __declspec(naked) __stdcall demo(void) {{
 	waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR));
 	waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR));
 
+	float t = 0.;
+
 	do 
 	{
 		waveOutGetPosition(hWaveOut, &MMTime, sizeof(MMTIME));
 
-		((PFNGLUNIFORM1FPROC)wglGetProcAddress("glUniform1f"))(0, (float)MMTime.u.sample / (float)44100);
+		((PFNGLUNIFORM1FPROC)wglGetProcAddress("glUniform1f"))(0, t);
 
 		// Passes
 		((PFNGLBINDFRAMEBUFFERPROC)wglGetProcAddress("glBindFramebuffer"))(GL_FRAMEBUFFER, firstPassFramebuffer);
@@ -205,8 +269,13 @@ void __declspec(naked) __stdcall demo(void) {{
 			
 			DispatchMessageA(&msg);
 		}
+
+		screenshot(nullptr);
+
+		t += 1./60.;
+
 	} while (
-		MMTime.u.sample < dec.samples/2
+		t * 44100. < dec.samples/2
 	);
 	
 	ExitProcess(0);
