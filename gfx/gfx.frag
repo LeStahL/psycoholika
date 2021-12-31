@@ -5,7 +5,7 @@ layout (location = 1) uniform int iPass;
 uniform sampler2D iChannel0;
 out vec4 out_color;
 
-const vec2 iResolution = vec2(1280., 720.);
+const vec2 iResolution = vec2(1920., 1080.);
 
 const vec3 c = vec3(1.,0.,-1.);
 const float pi = acos(-1.),
@@ -73,6 +73,16 @@ float hash12(vec2 p)
 {
 	vec3 p3  = fract(vec3(p.xyx) * .1031);
     p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+// Created by David Hoskins and licensed under MIT.
+// See https://www.shadertoy.com/view/4djSRW.
+// vec3->float hash function
+float hash13(vec3 p3)
+{
+	p3  = fract(p3 * .1031);
+    p3 += dot(p3, p3.zyx + 31.32);
     return fract((p3.x + p3.y) * p3.z);
 }
 
@@ -852,12 +862,12 @@ vec3 scene(vec3 x)
             x = RR * x;
             vec3 a;
             vec2 ai;
-            ms = .32;
+            ms = .32-.1*hash11(hardBeats+.112);
             float d = length(x)-ms;
             vec3 y = x;
             for(int i=0; i<4; ++i)
             {
-                if(i > 2 && hash11(float(i)+.231 + hardBeats) > .6) break;
+                // if(i > 1 && mix(hash11(float(i)+.231 + hardBeats), hash13(y), .5) > .6) break;
                 mat3 RRa = rot3(2.*pi*(2.*hash31(float(i+23))-1.));
                 y = RRa * y;
                 ai = inverseSF(normalize(y), 40., a);
@@ -997,7 +1007,7 @@ vec3 scene(vec3 x)
             float i = floor(2.*(.5+.5*lfnoise(.5*nbeats*c.xx))),
                 d,
                 rm = .3,
-                nr = 10.;
+                nr = 7.;
             
             for(float r = rm/nr; r <= rm; r += rm/nr)
             {
@@ -1050,29 +1060,35 @@ vec3 scene(vec3 x)
             float sa = smoothstep(0.,1.,x.z);
             x.xy -= sa*.3*vec2(lfnoise(x.zz*.3 + .2*iTime), lfnoise(x.zz*.3+.2*iTime+13.));
     
-            float zs = 2.;
-            float z = mod(x.z - .4*iTime, zs) - .5*zs,
-                zj = x.z - .4*iTime - z;
+            float bbx = length(x.xy)-.3;
+            if(bbx < 1.e-2)
+            {
+                float zs = 2.;
+                float z = mod(x.z - .4*iTime, zs) - .5*zs,
+                    zj = x.z - .4*iTime - z;
 
-            float k = 4.+round(8.*hash11(abs(zj))), r = .1, rs = .025;
-            float p = atan(x.y,x.x);
-            vec3 er = vec3(cos(p), sin(p), 0.),
-                ez = c.yyx,
-                ep = vec3(-sin(p), cos(p), 0.);
-            vec3 xs = r*er + .5*ez + rs*er*cos(k*p-iTime) + rs*ez*sin(k*p-iTime),
-                ns = r*ep + rs*vec3(-sin(p)*cos(k*p-iTime)-k*cos(p)*sin(k*p-iTime), cos(p)*cos(k*p-iTime)-k*sin(p)*sin(k*p-iTime), 0.) + rs*ez*k*cos(k*p-iTime);
-            mat3 m = ortho(normalize(ns)),
+                float k = 4.+round(8.*hash11(abs(zj))), 
+                    r = .1+.1*(.5+.5*lfnoise(vec2(nbeats, zj))),
+                    rs = .025+.015*(.5+.5*lfnoise(vec2(nbeats,zj)+2.132));
+                float p = atan(x.y,x.x);
+                vec3 er = vec3(cos(p), sin(p), 0.),
+                    ez = c.yyx,
+                    ep = vec3(-sin(p), cos(p), 0.);
+                vec3 xs = r*er + .5*ez + rs*er*cos(k*p-iTime) + rs*ez*sin(k*p-iTime),
+                    ns = r*ep + rs*vec3(-sin(p)*cos(k*p-iTime)-k*cos(p)*sin(k*p-iTime), cos(p)*cos(k*p-iTime)-k*sin(p)*sin(k*p-iTime), 0.) + rs*ez*k*cos(k*p-iTime);
+                mat3 m = ortho(normalize(ns)),
+                    mt = transpose(m);
+                d = length(mt * (vec3(x.xy, z)-xs))-rs;
+                // d = dbox3( vec3(.003, .01, .01));
+                sdf = add(sdf, vec3(10., d, 0.));
+
+                xs = r*er + .5*ez;
+                ns = r*ep;
+                m = ortho(normalize(ns));
                 mt = transpose(m);
-            d = length(mt * (vec3(x.xy, z)-xs))-rs;
-            // d = dbox3( vec3(.003, .01, .01));
-            sdf = add(sdf, vec3(10., d, 0.));
-
-            xs = r*er + .5*ez;
-            ns = r*ep;
-            m = ortho(normalize(ns));
-            mt = transpose(m);
-            d = length(mt * (vec3(x.xy, z)-xs))-rs;
-            sdf = add(sdf, vec3(9., d, 0.));
+                d = length(mt * (vec3(x.xy, z)-xs))-rs;
+                sdf = add(sdf, vec3(9., d, 0.));
+            }
         }
     }
     
@@ -1354,7 +1370,7 @@ bool ray(inout vec3 col, out vec3 x, inout float d, vec3 dir, out vec3 s, vec3 o
 void main()
 {
     stepTime = mod(iTime+.5*spb, spb)-.5*spb;
-    nbeats = (iTime-stepTime+.5*spb)/spb + smoothstep(-.2*spb, .2*spb, stepTime);
+    nbeats = (iTime-stepTime+.5*spb)/spb + smoothstep(-.1*spb, .1*spb, stepTime);
     scale = smoothstep(-.3*spb, 0., stepTime)*smoothstep(.3*spb, 0., stepTime);
     hardBeats = round((iTime-stepTime)/spb);
     
