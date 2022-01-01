@@ -1,4 +1,4 @@
-/* Abstraction-Confusion
+/* Psycoholika
  * Copyright (C) 2021  Alexander Kraus <nr4@z10.info>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,7 +30,6 @@
 #define MINIMP3_ONLY_MP3
 #define MINIMP3_IMPLEMENTATION
 #define MINIMP3_FLOAT_OUTPUT
-// #define DR_WAV_NO_STDIO
 #include <minimp3.h>
 #include <minimp3_ex.h>
 
@@ -188,13 +187,11 @@ void __declspec(naked) __stdcall demo(void) {{
 		((PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i"))(1, 0);
 		
 		glRectf(-1, -1, 1, 1);
-		// glFlush();
 
 		((PFNGLBINDFRAMEBUFFERPROC)wglGetProcAddress("glBindFramebuffer"))(GL_FRAMEBUFFER, 0);
 		((PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i"))(1, 1);
 		
 		glRectf(-1, -1, 1, 1);
-		// glFlush();
 	
 		SwapBuffers(hDC);
 
@@ -206,7 +203,6 @@ void __declspec(naked) __stdcall demo(void) {{
 				ExitProcess(0);
 			}
 			
-			// TranslateMessage(&msg);
 			DispatchMessageA(&msg);
 		}
 	} while (

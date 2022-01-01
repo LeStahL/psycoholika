@@ -1,4 +1,4 @@
-# Abstraction-Confusion
+# Psycoholika
 # Copyright (C) 2021 Alexander Kraus <nr4@z10.info>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -21,15 +21,8 @@ project(aldi)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/FindWindowsSDK")
 
-set(BUILD_OIDOS OFF)
-# set(BUILD_4KLANG)
-
 # Find required tools
-find_program(NASM NAMES nasm.exe)
-find_program(YASM NAMES yasm-1.3.0-win64.exe)
-find_program(OIDOS_CONVERT NAMES OidosConvert.exe)
 find_program(MINIFIER NAMES shader_minifier.exe)
-find_program(CRINKLER NAMES Crinkler.exe)
 find_program(VALIDATOR NAMES glslangValidator.exe)
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 find_package(WindowsSDK REQUIRED)
@@ -54,13 +47,4 @@ add_custom_target(intro.obj ALL SOURCES ${INTRO_SOURCES} COMMAND ${CMAKE_CXX_COM
 add_custom_target(validate-gfx ALL SOURCES ${CHECK_GFX_SOURCES} COMMAND ${VALIDATOR} ${PROJECT_SOURCE_DIR}/gfx/gfx.frag COMMENT "Validating gfx.frag...")
 add_custom_target(gfx.h ALL SOURCES ${MINIFY_GFX_SOURCES} COMMAND ${MINIFIER} ${PROJECT_SOURCE_DIR}/gfx/gfx.frag -o gfx.h COMMENT "Minifying gfx.frag..." DEPENDS validate-gfx)
 
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
-    set(COMPMODE FAST)
-else()
-    set(COMPMODE VERYSLOW)
-    set(ADDITIONAL_OPTIONS /HASHTRIES:2400 /ORDERTRIES:20000 /TINYIMPORT /UNSAFEIMPORT /UNALIGNCODE)
-endif()
-
-# add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CRINKLER} /ENTRY:demo /SUBSYSTEM:Windows /LARGEADDRESSAWARE /PROGRESSGUI /COMPMODE:${COMPMODE} /PRIORITY:NORMAL /REPORT:compress.htm ${ADDITIONAL_OPTIONS} intro.obj opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj)
 add_custom_target(${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe ALL SOURCES COMMAND ${CMAKE_LINKER} /ENTRY:demo intro.obj /SUBSYSTEM:Windows vcruntime.lib opengl32.lib User32.lib Winmm.lib Kernel32.lib Gdi32.lib ucrt.lib /out:"${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" COMMENT "Linking ${PROJECT_NAME}-${CMAKE_BUILD_TYPE}.exe" DEPENDS intro.obj)
-# message("s" ${CMAKE_LINKER})
