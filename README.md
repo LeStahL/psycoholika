@@ -15,6 +15,7 @@ Team210 Bullencoolen Release. PC-Demo shown at Discozelt Dauercamping 2021. 20k 
     * glslang-validator (<https://github.com/KhronosGroup/glslang/releases/tag/master-tot>)
 * Create an out-of-source build directory, for example `[SOURCE_ROOT]/build`.
 * Navigate to this directory
+* Copy the track from `msx/Psychoholika_2` to the build folder and rename it to `msx.mp3`.
 * For debug builds (fast) run `cmake [SOURCE_ROOT] -G"Visual Studio 15 2017" -DCMAKE_BUILD_TYPE=Debug`, for release builds (quite time-consuming), run `cmake [SOURCE_ROOT] -G"Visual Studio 15 2017" -DCMAKE_BUILD_TYPE=Release`
 * Run `cmake --build . --config Release`
 * Enjoy - And don't forget to have a beer with NR4/Team210 at any Demoparty you feel is appropriate :)
