@@ -22,7 +22,7 @@ project(aldi)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/thirdparty/FindWindowsSDK")
 
 # Find required tools
-find_program(MINIFIER NAMES shader_minifier.exe)
+find_program(MINIFIER NAMES shader_minifier.exe HINTS ${CMAKE_CURRENT_BINARY_DIR})
 find_program(VALIDATOR NAMES glslangValidator.exe)
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 find_package(WindowsSDK REQUIRED)
